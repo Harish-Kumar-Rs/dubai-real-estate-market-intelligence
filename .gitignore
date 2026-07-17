@@ -1,0 +1,19 @@
+# Data files (too large / raw data)
+data/*.csv
+data/cleaned/*.csv
+*.csv
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
