@@ -56,4 +56,17 @@ SELECT
   ) AS yoy_txn_growth_pct
 FROM with_lag
 ORDER BY year;
- 
+-------------------------------------
+CREATE VIEW kpi AS 
+WITH agg AS(
+SELECT 
+ROUND(SUM(actual_worth)::NUMERIC,2) AS net_transaction_value,
+COUNT(*) AS total_txn
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) ='sales' AND year BETWEEN 1998 AND 2025
+)
+SELECT 
+net_transaction_value,
+ROUND((net_transaction_value / total_txn)::NUMERIC,2) AS avg_transaction_Value,
+total_txn
+FROM agg;
