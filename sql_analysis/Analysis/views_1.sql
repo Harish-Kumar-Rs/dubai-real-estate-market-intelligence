@@ -70,3 +70,194 @@ net_transaction_value,
 ROUND((net_transaction_value / total_txn)::NUMERIC,2) AS avg_transaction_Value,
 total_txn
 FROM agg;
+-----------------------------------------------------------------
+CREATE OR REPLACE VIEW kpi_2 AS(
+SELECT 
+year,
+ROUND(SUM(actual_worth_capped)::NUMERIC,2) AS net_transaction_value
+FROM transactions 
+WHERE LOWER(TRIM(trans_group)) ='sales' AND year BETWEEN 1998 AND 2025
+GROUP BY year
+ORDER BY net_transaction_value DESC
+LIMIT 1
+)
+-----------------------------------------------------------------------
+CREATE VIEW Total_unq_area AS
+SELECT
+    COUNT(DISTINCT area_name) AS total_unique_area
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales';
+-------------------------------------------------------------------------
+CREATE VIEW line_chart AS
+SELECT 
+year,
+ROUND(SUM(actual_worth_capped)::NUMERIC,2) AS net_transaction_value
+FROM transactions
+WHERE LOWER (TRIM(trans_group))='sales' AND year BETWEEN 1998 AND 2025
+GROUP BY year
+ORDER BY year
+--------------------------------------------------------------------------
+CREATE VIEW property_type_summary AS
+SELECT 
+    property_type,
+    ROUND(SUM(actual_worth_capped)::NUMERIC, 2) AS net_transaction_value,
+    COUNT(*) AS txn_count
+FROM transactions 
+WHERE LOWER(TRIM(trans_group)) = 'sales' 
+  AND year BETWEEN 1998 AND 2025
+GROUP BY property_type;
+--------------------------------------------------------------------------
+SELECT 
+    area_name,
+    COUNT(*) AS txn_count
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND year BETWEEN 1998 AND 2025
+GROUP BY area_name
+ORDER BY txn_count ASC
+LIMIT 20;
+
+SELECT COUNT(DISTINCT area_name) AS total_areas
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND year BETWEEN 2018 AND 2020
+GROUP BY area_name
+HAVING COUNT(*) < 30;
+--------------------------------------------------------------------------
+WITH window_early AS (
+    SELECT 
+        area_name,
+        property_type,
+        COUNT(*) AS txn_count_early,
+        ROUND(AVG(actual_worth_capped)::NUMERIC, 2) AS avg_value_early
+    FROM transactions
+    WHERE LOWER(TRIM(trans_group)) = 'sales'
+      AND property_type IN ('Unit', 'Villa', 'Land')
+      AND year BETWEEN 2018 AND 2020
+    GROUP BY area_name, property_type
+    HAVING COUNT(*) >= 5
+),
+window_recent AS (
+    SELECT 
+        area_name,
+        property_type,
+        COUNT(*) AS txn_count_recent,
+        ROUND(AVG(actual_worth_capped)::NUMERIC, 2) AS avg_value_recent
+    FROM transactions
+    WHERE LOWER(TRIM(trans_group)) = 'sales'
+      AND property_type IN ('Unit', 'Villa', 'Land')
+      AND year BETWEEN 2023 AND 2025
+    GROUP BY area_name, property_type
+    HAVING COUNT(*) >= 5
+)
+SELECT 
+    e.area_name,
+    e.property_type,
+    e.txn_count_early,
+    e.avg_value_early,
+    r.txn_count_recent,
+    r.avg_value_recent,
+    ROUND(
+        ((r.avg_value_recent - e.avg_value_early) / e.avg_value_early) * 100, 2
+    ) AS growth_pct
+FROM window_early e
+INNER JOIN window_recent r 
+    ON e.area_name = r.area_name 
+    AND e.property_type = r.property_type
+ORDER BY e.property_type, growth_pct DESC;
+----------------------------------------------------------------------------------
+SELECT DISTINCT area_name
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND property_type IN ('Unit', 'Villa', 'Land')
+  AND year BETWEEN 2018 AND 2025
+ORDER BY area_name;
+----------------------------------------------------------------------------------
+SELECT DISTINCT nearest_mall AS place_name, 'mall' AS place_type
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND nearest_mall <> 'Unknown'
+
+UNION
+
+SELECT DISTINCT nearest_metro AS place_name, 'metro' AS place_type
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND nearest_metro <> 'Unknown'
+
+ORDER BY place_type, place_name;
+--------------------------------------------------------------------------------------
+SELECT DISTINCT nearest_metro
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND nearest_metro <> 'Unknown'
+  AND nearest_metro NOT ILIKE '%metro station%'
+ORDER BY nearest_metro;
+-------------------------------------------------------------------------------
+SELECT DISTINCT 
+    CASE 
+        WHEN nearest_metro = 'Jumeirah Beach Resdency' THEN 'Jumeirah Beach Residency'
+        ELSE nearest_metro
+    END AS place_name,
+    'metro' AS place_type
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND nearest_metro <> 'Unknown'
+  AND nearest_metro ILIKE '%metro station%'
+
+UNION
+
+SELECT DISTINCT nearest_mall AS place_name, 'mall' AS place_type
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales'
+  AND nearest_mall <> 'Unknown'
+
+ORDER BY place_type, place_name;
+----------------------------------------------------------------------------------
+CREATE VIEW area_property_growth AS
+WITH window_early AS (
+    SELECT 
+        area_name,
+        property_type,
+        COUNT(*) AS txn_count_early,
+        ROUND(AVG(actual_worth_capped)::NUMERIC, 2) AS avg_value_early
+    FROM transactions
+    WHERE LOWER(TRIM(trans_group)) = 'sales'
+      AND property_type IN ('Unit', 'Villa', 'Land')
+      AND year BETWEEN 2018 AND 2020
+    GROUP BY area_name, property_type
+    HAVING COUNT(*) >= 5
+),
+window_recent AS (
+    SELECT 
+        area_name,
+        property_type,
+        COUNT(*) AS txn_count_recent,
+        ROUND(AVG(actual_worth_capped)::NUMERIC, 2) AS avg_value_recent
+    FROM transactions
+    WHERE LOWER(TRIM(trans_group)) = 'sales'
+      AND property_type IN ('Unit', 'Villa', 'Land')
+      AND year BETWEEN 2023 AND 2025
+    GROUP BY area_name, property_type
+    HAVING COUNT(*) >= 5
+)
+SELECT 
+    e.area_name,
+    e.property_type,
+    e.txn_count_early,
+    e.avg_value_early,
+    r.txn_count_recent,
+    r.avg_value_recent,
+    ROUND(
+        ((r.avg_value_recent - e.avg_value_early) / e.avg_value_early) * 100, 2
+    ) AS growth_pct
+FROM window_early e
+INNER JOIN window_recent r 
+    ON e.area_name = r.area_name 
+	----------------------------------------------------------------------
+SELECT 
+year,
+count(*)AS transaction_count
+FROM transactions
+WHERE LOWER(TRIM(trans_group)) = 'sales' AND year BETWEEN 1998 AND 2025
+GROUP BY year
