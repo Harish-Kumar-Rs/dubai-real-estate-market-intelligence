@@ -261,3 +261,27 @@ count(*)AS transaction_count
 FROM transactions
 WHERE LOWER(TRIM(trans_group)) = 'sales' AND year BETWEEN 1998 AND 2025
 GROUP BY year
+
+SELECT * FROM transactions
+LIMIT(10)
+---------------------------------------------------------------------------
+SELECT
+    area_name,
+    year,
+    SUM(actual_worth_capped) AS total_value,
+    AVG(actual_worth_capped) AS avg_value,
+    COUNT(*) AS txn_count
+FROM transactions
+WHERE trans_group = 'Sales'
+    AND year BETWEEN 2000 AND 2025
+GROUP BY area_name, year
+ORDER BY area_name, year;
+
+SELECT * FROM transactions
+LIMIT 10
+---------------------------------------------------------------------------------
+SELECT COUNT(*) FROM area_cluster_assignments; 
+SELECT * FROM cluster_profile_summary; 
+SELECT * FROM area_cluster_assignments WHERE area_name ILIKE '%marsa%';
+SELECT * FROM cluster_profile_summary ORDER BY cluster;
+SELECT * FROM cluster_radar_scores ORDER BY cluster, "Metric";
