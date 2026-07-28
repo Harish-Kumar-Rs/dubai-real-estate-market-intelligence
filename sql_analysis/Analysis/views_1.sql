@@ -261,6 +261,18 @@ count(*)AS transaction_count
 FROM transactions
 WHERE LOWER(TRIM(trans_group)) = 'sales' AND year BETWEEN 1998 AND 2025
 GROUP BY year
+SELECT * FROM area_coordinates
+---------------------------------------------------------------------------------
+SELECT a.area_name
+FROM area_cluster_assignments a
+LEFT JOIN area_coordinates g ON a.area_name = g.area_name
+WHERE g.area_name IS NULL
+ORDER BY a.area_name;
+
+SELECT area_name, COUNT(*)
+FROM area_coordinates
+GROUP BY area_name
+HAVING COUNT(*) > 1;
 
 SELECT * FROM transactions
 LIMIT(10)
@@ -280,8 +292,13 @@ ORDER BY area_name, year;
 SELECT * FROM transactions
 LIMIT 10
 ---------------------------------------------------------------------------------
-SELECT COUNT(*) FROM area_cluster_assignments; 
+SELECT * FROM area_cluster_assignments; 
 SELECT * FROM cluster_profile_summary; 
 SELECT * FROM area_cluster_assignments WHERE area_name ILIKE '%marsa%';
 SELECT * FROM cluster_profile_summary ORDER BY cluster;
 SELECT * FROM cluster_radar_scores ORDER BY cluster, "Metric";
+SELECT 
+SUM(n_areas)
+FROM cluster_profile_summary
+SELECT * FROM area_landmark_stats_summary
+SELECT * FROM area_cluster_map_data
