@@ -1,146 +1,149 @@
 # Dubai Real Estate Market Intelligence Platform
 
-A Business Analyst portfolio project analyzing 1.75M+ property transactions from the Dubai Land Department to surface investor-relevant patterns in growth, value, and area characteristics — built with a deliberate focus on statistical rigor over surface-level polish.
+A Business Analytics portfolio project analyzing **1.75 million+ Dubai property transactions** from the Dubai Land Department to uncover investor-focused insights using SQL, Python, statistical testing, and interactive Power BI dashboards.
 
-**Stack:** PostgreSQL · Power BI · Python (pandas, geopy, googlemaps, scipy, scikit-learn)
+> Rather than stopping at descriptive KPIs, this project validates every analytical claim using appropriate statistical methods and reports both significant and non-significant findings.
 
-## Why This Project
+---
 
-Most public "Dubai real estate dashboard" projects stop at descriptive KPIs — totals, averages, trend lines. This project goes further: every claim on the dashboard that could be tested, was tested. Where a hypothesis didn't hold up (landmark proximity driving growth, property type driving growth), that null result is reported as-is rather than reframed into something that sounds more impressive. Where a raw statistic was misleading (outlier-inflated means, mix-shift-distorted area growth), the misleading version was diagnosed and corrected before it reached the dashboard.
+## Dashboard Preview
 
-The goal isn't to prove a thesis. It's to demonstrate the analytical discipline of not fooling yourself — or the reader — with your own numbers.
+> powerbi/dashboard_screenshots/Screenshot 2026-08-02 174515.png
+>powerbi/dashboard_screenshots/Screenshot 2026-08-02 174556.png
+>powerbi/dashboard_screenshots/Screenshot 2026-08-02 174617.png
+>powerbi/dashboard_screenshots/Screenshot 2026-08-02 174641.png
 
-## Data & Scope
+---
 
-**Source:** Dubai Land Department transaction records, `real_estate_data` PostgreSQL database, `transactions` table (1,748,554 rows)
+## Project Overview
 
-**Analysis window:** 1998–2025. Pre-1998 rows excluded (sparse, unreliable legacy data). 2026 excluded (partial year, would distort any year-over-year comparison). The area clustering study specifically uses the full 2000–2025 window rather than a fixed comparison window — see Page 4 below.
+This project explores Dubai's residential property market between **1998 and 2025**, focusing exclusively on **sales transactions** to identify meaningful market trends, investment patterns, and area characteristics.
 
-**Transaction filter:** `trans_group = 'Sales'` only, applied everywhere. Mortgages and Gifts are structurally different transaction types and are excluded to avoid conflating them with market-price sales.
+The dashboard combines SQL data engineering, Python-based statistical analysis, and Power BI visualization to answer business questions such as:
 
-**Value field convention:** `actual_worth_capped` is used for anything sensitive to skew — averages, growth rates, per-area comparisons. Raw `actual_worth` is only used for simple SUM-based facts (e.g., "which year had the highest total transaction value"), where ranking order was verified to be identical either way.
+* Which areas have experienced the strongest long-term growth?
+* Does proximity to malls or metro stations influence property appreciation?
+* Do different property types exhibit significantly different growth?
+* Can Dubai communities be grouped into meaningful investment profiles?
 
-### A note on CAGR
+---
 
-An early version of this project computed CAGR (2021–2025) as a headline growth metric. It was dropped entirely. The 2021–25 period was shaped by COVID-era capital flight, the Golden Visa program, and war-driven migration into the UAE — a shock-driven boom, not organic market growth. Presenting a CAGR calculated over that window as a "typical" growth rate would have been misleading, so the metric was removed rather than caveated.
+## Key Features
 
-## Architecture: Static vs. Dynamic KPIs
+### Executive Dashboard
 
-KPIs that don't change with user interaction (e.g., total historical transaction value, peak value year) are computed once in SQL views and pulled directly into Power BI. KPIs that respond to slicers (e.g., year-over-year growth for a selected year) are computed in DAX at query time. This separation was deliberate — it keeps static facts fast and simple, and keeps interactive logic isolated and testable, rather than mixing the two and creating an inconsistent mental model of "where does this number come from."
+* Historical market KPIs
+* Dynamic Year-over-Year analysis
+* Market trend visualization
+* Property type distribution
 
-Every `WHERE` filter used across the project was checked to confirm it was actually excluding rows — not just present for defensive-coding's sake.
+### Landmark Correlation Analysis
 
-## Page 1: Overview
+* Distance analysis to malls and metro stations
+* Pearson correlation testing
+* Growth comparison by property type
 
-- Static KPI row: Net Transaction Value, Total Sales Transactions, Avg Transaction Value, Peak Value Year, Areas Covered
-- Dynamic KPI row (year slicer): Selected/Previous Year Value & Count, YoY Growth % with conditional formatting
-- Trend line, 1998–2025
-- Property Type composition (value vs. count) — this comparison revealed a rank-swap between Land and Villa depending on whether you look at total value or transaction count, which is itself a useful reminder that "biggest" depends on which metric you're asking about
+### Statistical Property Type Analysis
 
-## Page 2: Area Analysis — Landmark Correlation
+* Shapiro-Wilk normality testing
+* Levene's variance testing
+* Kruskal-Wallis hypothesis testing
+* Investor profile comparison
 
-**Question:** Does proximity to a mall or metro station predict an area's growth?
+### Investment Segmentation
 
-**Method:**
+* K-Means clustering
+* Area classification into four investor profiles
+* Geographic cluster visualization
+* Comparative cluster scoring
 
-- Geocoded 186 areas and 44 malls/metro stations (Nominatim first pass, Google Geocoding API to close remaining gaps — 100% final coverage)
-- Computed haversine distance from each area to its nearest mall and nearest metro station
-- Built an area-level growth metric: % change in average `actual_worth_capped` between a 2018–20 window and a 2023–25 window, computed separately per property type (Unit/Villa/Land — Building excluded for data sparsity), for areas with ≥5 transactions in both windows
+---
 
-**Why property-type-separated growth matters:** An early blended version of this metric showed apparent −80% to −90% "crashes" in some areas. These were not real declines — they were an artifact of property-type mix-shift (e.g., an area that was Land-heavy in 2018–20 becoming Unit-heavy by 2023–25, diluting the blended average with a structurally cheaper property type). Controlling for property type before computing growth was essential to get a real signal instead of a measurement artifact.
+## Dataset
 
-**Result:** Pearson correlation between distance and growth, tested per property type and overall — no statistically significant correlation found anywhere.
+| Item            | Details                      |
+| --------------- | ----------------------------- |
+| Source          | Dubai Land Department        |
+| Records         | 1,748,554 Sales Transactions |
+| Analysis Period | 1998–2025                    |
+| Areas Covered   | 243
+| Database        | PostgreSQL                   |
 
-| Comparison | r | p-value |
-|---|---|---|
-| Overall vs. Mall distance | −0.083 | 0.235 |
-| Overall vs. Metro distance | −0.042 | 0.554 |
-| Unit vs. Mall distance (closest to significance) | — | 0.097 |
+---
 
-**Interpretation:** Landmark proximity does not meaningfully predict growth in this dataset, over this timeframe. This is reported as a genuine null finding, not reframed as a weak positive.
+## Technology Stack
 
-**Explored and explicitly parked** (Phase 2 candidates, not pursued): business license data, population data, income data, metro ridership data. Flagged as legitimate enrichment ideas but excluded to avoid scope creep on this phase of the project.
+| Category        | Tools                                       |
+| --------------- | ----------------------------------------------- |
+| Database        | PostgreSQL                                  |
+| Analytics       | Python (pandas, scipy, scikit-learn, geopy) |
+| Visualization   | Power BI                                    |
+| Query Language  | SQL                                         |
+| Data Processing | Power Query, DAX                            |
 
-**Limitations** (stated on the dashboard itself): this analysis measures growth, not price level; uses straight-line distance rather than actual travel distance/time; and depends on a ≥5-transaction threshold per window that inherently favors more active areas.
+---
 
-## Statistical Study: Does Growth Differ by Property Type?
+## Key Findings
 
-**Hypothesis (H₀):** Growth rate does not significantly differ by property type (Unit / Villa / Land).
+* Landmark proximity showed **no statistically significant relationship** with long-term property growth.
+* Growth rates were **not significantly different** across Units, Villas, and Land after applying appropriate statistical testing.
+* Four distinct investment profiles were identified using **K-Means clustering**, separating premium growth markets from declining and high-volatility areas.
+* The project prioritizes statistical validity by testing assumptions before selecting analytical methods and reporting null findings rather than forcing positive conclusions.
 
-**Method — and why this specific method:**
+---
 
-- Shapiro-Wilk test run per group to check normality. All three groups failed (p < 0.01 in every case) — the data is not normally distributed.
-- Levene's test for homogeneity of variance: F = 7.385, p = 0.0008 — variances are significantly unequal across groups.
-- Because both assumptions required for a standard one-way ANOVA were violated, Kruskal-Wallis (the non-parametric alternative) was used instead — a one-way ANOVA would not have been statistically valid here.
+## Repository Structure
 
-**Result:** H = 0.716, p = 0.699, effect size ε² = 0.0035 — not significant, and the effect size is negligible. Growth rates do not meaningfully differ by property type.
+├── powerbi/
+│   └── Realestate_Dashboard.pbix
+├── python_notebooks/
+│   └── Corelattion_Analysis.ipynb
+├── sql_analysis/
+│   └── Analysis/
+│       └── views_1.sql
+├── docs/
+│   └── Methodology.md
+├── .gitattributes
+├── .gitignore
+└── README.md
+```
 
-**The outlier story:** Raw group means look different at first glance — Land averaged 81.3% growth vs. ~55–56% for Unit and Villa. But this is outlier-driven: the medians are far closer together (Land 55.3%, Unit 46.0%, Villa 46.8%). A handful of high-outlier Land transactions pull the mean up without reflecting the typical transaction. Reporting only the mean here would have overstated Land's real growth character.
+---
 
-**Investor framing:** since there's no statistically meaningful growth difference by type, the honest investment question isn't "which type grows more" — it's risk, liquidity, and ticket size:
+## Design Philosophy
 
-| Type | n | Avg Deal Size | Character |
-|---|---|---|---|
-| Unit | 59 | 2.37M AED | Most liquid, lowest entry point, tightest spread |
-| Villa | 71 | 6.94M AED | Mid-tier ticket size, similar risk profile to Unit |
-| Land | 75 | 13.79M AED | Highest ticket size and variance; upside concentrated in a small number of outlier deals rather than the typical transaction |
+This project emphasizes **analytical integrity over visual polish**.
 
-**Limitation:** sample sizes (n = 59–75 areas per type) support directional comparison but are too small for precise estimates — within-type differences should be read as suggestive, not definitive.
+Every statistical conclusion is supported by appropriate testing, assumptions are validated before analysis, and negative or null findings are presented transparently rather than omitted.
 
-## Page 4: Area Investment Segmentation (K-Means Clustering)
+---
 
-**Question:** Can Dubai areas be grouped into a small number of statistically distinct, plain-language investor profiles based on how they've actually behaved historically — rather than relying on a windowed before/after comparison?
+## Future Enhancements
 
-**Method:**
+* Area Investment Score (0–100)
+* Additional predictive modelling
+* Enhanced investor recommendation framework
+* Dashboard UX improvements
 
-Unlike the landmark-correlation study (which compares a 2018–20 window to a 2023–25 window), this analysis uses each area's **full 2000–2025 transaction history**, since the goal here is to characterize an area's overall market behavior, not measure change between two points in time.
+---
 
-- **Feature set** (after checking the correlation matrix and dropping `total_value`, which is mathematically redundant with `txn_count × avg_deal_size`, r = 0.898):
-  - `txn_count` — transaction volume
-  - `avg_deal_size` — average transaction value
-  - `growth_b_slope` — linear regression slope of yearly average value over time, chosen over a fixed-window endpoint comparison since ~47% of areas had no data in a fixed 2000–02 / 2023–25 window pair
-  - `volatility_cv` — coefficient of variation of yearly average value
-- **Reliability filter:** areas required ≥10 years of *reliable* transaction history (years with <10 transactions were dropped as thin before the ≥10-year check was applied — reversing this order was an early bug, see below). Final qualifying set: **103 of 238 candidate areas.**
-- **Scaling:** `StandardScaler` applied to all four features, confirmed mean ≈ 0 / std ≈ 1 post-scaling.
-- **k selection:** elbow method showed a clear inflection at k = 4. Silhouette score technically preferred k = 2 (0.52), with k = 4 a close second (~0.43). k = 4 was chosen deliberately over the statistically "best" k = 2, because k = 2 wouldn't support the goal of producing distinct, plain-language investor personas — a tradeoff stated here rather than hidden behind the silhouette number.
+## Documentation
 
-**Two bugs caught and fixed during pipeline development** — both changed real output, not just code style:
+For readers interested in the complete analytical methodology  including statistical assumptions, hypothesis testing, feature engineering, clustering methodology, data validation, limitations, and development decisions see:
 
-1. **Filter-order bug:** the pipeline originally checked "≥10 years of history" *before* removing thin-transaction years (<10 txns/year), letting unreliable years count toward the history-length requirement. Re-sequencing the filter (drop thin years first, then require ≥10 remaining reliable years) changed the qualifying area count from an initially miscounted 165/238 down to the correct 103/238.
-2. **Al Merkadh distortion:** pre-fix, this area showed an implausible −2.39M/year growth slope, traced to two artificially high-value years (2013: 4 transactions, 2014: 1 transaction) skewing the regression. Post-fix, the slope corrected to −955K/year — verified against raw yearly data as a genuine structural transition (a handful of expensive early deals, followed by thousands of cheaper later ones), not a data artifact.
+**📄 dubai-real-estate-market-intelligence
+/docs**
 
-**Result:** four clusters, manually inspected area-by-area (not just by their averages) to confirm each grouping made sense:
+---
 
-| Cluster | Name | n areas | Avg growth (AED/yr) | Avg deal size | Volatility (CV) |
-|---|---|---|---|---|---|
-| 0 | Established Mid-Market Areas | 64 | +52.8K | 3.13M | 0.50 |
-| 1 | Premium Growth Areas | 22 | +319.5K | 11.2M | 0.50 |
-| 2 | High-Turnover, Declining-Value Areas | 4 | −166.2K | 1.8M | 0.92 |
-| 3 | High-Volatility Declining Areas | 13 | −568.4K | 1.9M | 1.48 |
+## Author
 
-- **Cluster 1** — low volume, highest deal size, strongest growth. Confirmed via manual inspection: Island 2, Jumeirah Second, Al Nahda Second, Um Suqaim, Al Manara — established premium/villa areas.
-- **Cluster 0** — moderate on every dimension. Confirmed as a genuine broad middle market, not a leftover bucket — spans Jabal Ali, Nad Al Shiba, Jumeirah First at the higher end down to Madinat Hind 4, Wadi Al Safa 2 at the lower end.
-- **Cluster 2 (n = 4) — flagged for caution throughout the dashboard.** Extreme transaction volume, moderate-low value, negative growth, high volatility. Confirmed as Marsa Dubai (Dubai Marina), Business Bay, Al Barsha South Fourth, Al Thanyah Fifth — dense, iconic, high-turnover hotspots. With only 4 areas, this cluster's statistics are treated as directional, not a stable category.
-- **Cluster 3** — highest volume, lowest value, most negative growth, highest volatility. Includes both Al Merkadh (confirming the structural-transition pattern found during feature-engineering debugging) and Burj Khalifa alongside peripheral areas like Al Warsan First. This cluster groups areas by **shared statistical pattern — not by neighborhood character or a shared underlying cause** — a distinction stated explicitly on the dashboard rather than glossed over.
+**Harish Kumar**
 
-**Cross-cluster comparison scoring:** each cluster is also scored 0–100 on five dimensions (Growth, Deal Size, Liquidity, Stability, Volume) using `MinMaxScaler`, shown as a clustered bar chart. Two things worth being explicit about:
+Business Analytics | Data Analytics | SQL | Python | Power BI
 
-- Scores are **relative, not absolute** — because scaling is fit across only the 4 cluster-level values, the lowest-scoring cluster on any metric always scores 0, even if its real gap to the next cluster is small. Stated directly on the dashboard next to the chart.
-- **Volume and Liquidity are deliberately distinct metrics.** An earlier version of this scoring used `n_areas` (cluster size) as a stand-in for "Volume," which conflated a clustering artifact with an actual market characteristic. This was corrected: Volume is now based on total transaction activity (`avg_txn_count × n_areas`), while Liquidity remains per-area average transaction count.
+LinkedIn:(https://www.linkedin.com/in/harish-kumar-analyst/)
 
-**Area map:** the 103 clustered areas were joined to previously geocoded coordinates (from the Page 2 landmark-correlation work) and plotted geographically, colored by cluster — giving a spatial view of where each investor profile is physically concentrated across the city, alongside the statistical view.
+---
 
-**Limitation:** clustering covers 103 of 238 candidate areas — areas without ≥10 years of reliable transaction history were excluded rather than analyzed on insufficient data.
-
-## Design Principles Followed Throughout
-
-- **Statistical rigor is checked, not assumed.** Every test's assumptions (normality, variance homogeneity) were checked first, and the non-parametric alternative was used whenever assumptions failed — with the reasoning documented, not hidden.
-- **Effect size is reported alongside p-value.** A significant p-value with a negligible effect size is not treated as a meaningful finding.
-- **Null and negative findings are reported as such.** The landmark-correlation study and the property-type-growth study both came back non-significant. Both are shown on the dashboard exactly as found.
-- **Mockups are layout references only, never data sources.** AI-generated visual mockups were used during design to get panel structure and layout right — but every number that ended up on the live dashboard was cross-checked against the actual Postgres output before publishing. This wasn't a one-off precaution: an early mockup was caught showing a fabricated Levene's test result, and later mockups during the clustering phase were caught fabricating area counts, growth figures, and even placing a real area (Dubai Marina) into the wrong cluster with an invented growth number. Every one of these was cross-checked and corrected before reaching the dashboard.
-- **Real numbers live in Postgres, not hardcoded.** All test statistics, growth figures, and investor-profile numbers are pulled from dedicated result tables (`area_landmark_stats_summary`, `property_type_test_results`, `property_type_investor_profile`, `area_cluster_assignments`, `cluster_profile_summary`, `cluster_radar_scores`, `area_cluster_map_data`) rather than typed directly into the report.
-
-
-## Repository
-
-github.com/Harish-Kumar-Rs/dubai-real-estate-market-intelligence
+**If you found this project interesting, consider giving it a ⭐.**
