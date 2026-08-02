@@ -110,8 +110,9 @@ After checking the correlation matrix and dropping `total_value` — mathematica
 **Scaling:** `StandardScaler` applied to all four features, confirmed mean ≈ 0 / std ≈ 1 post-scaling.
 
 **k selection:** the elbow method showed a clear inflection at k = 4. Silhouette score technically preferred k = 2 (0.52), with k = 4 a close second (~0.43). k = 4 was chosen deliberately over the statistically "best" k = 2, because k = 2 wouldn't support the goal of producing distinct, plain-language investor personas — a tradeoff stated here rather than hidden behind the silhouette number.
->images/charts/optimalk.png
->images/charts/silhouette score.png
+![Elbow Method - Optimal K](images/charts/optimalk.png)
+
+![Silhouette Score](images/charts/silhouette%20score.png)
 
 ### Bugs caught and fixed
 
