@@ -133,8 +133,7 @@ Every statistical conclusion is supported by appropriate testing, assumptions ar
 
 For readers interested in the complete analytical methodology  including statistical assumptions, hypothesis testing, feature engineering, clustering methodology, data validation, limitations, and development decisions see:
 
-**📄 dubai-real-estate-market-intelligence
-/docs**
+**📄 [docs/Methodology.md](docs/Methodology.md)**
 
 ---
 
