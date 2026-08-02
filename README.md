@@ -8,10 +8,13 @@ A Business Analytics portfolio project analyzing **1.75 million+ Dubai property 
 
 ## Dashboard Preview
 
-> powerbi/dashboard_screenshots/Screenshot 2026-08-02 174515.png
->powerbi/dashboard_screenshots/Screenshot 2026-08-02 174556.png
->powerbi/dashboard_screenshots/Screenshot 2026-08-02 174617.png
->powerbi/dashboard_screenshots/Screenshot 2026-08-02 174641.png
+![Executive Summary](powerbi/dashboard_screenshots/Screenshot%202026-08-02%20174515.png)
+
+![Property Type Analysis](powerbi/dashboard_screenshots/Screenshot%202026-08-02%20174556.png)
+
+![Area Clustering](powerbi/dashboard_screenshots/Screenshot%202026-08-02%20174617.png)
+
+![Area Analysis](powerbi/dashboard_screenshots/Screenshot%202026-08-02%20174641.png)
 
 ---
 
@@ -94,6 +97,7 @@ The dashboard combines SQL data engineering, Python-based statistical analysis, 
 
 ## Repository Structure
 
+```
 ├── powerbi/
 │   └── Realestate_Dashboard.pbix
 ├── python_notebooks/
@@ -107,8 +111,6 @@ The dashboard combines SQL data engineering, Python-based statistical analysis, 
 ├── .gitignore
 └── README.md
 ```
-
----
 
 ## Design Philosophy
 
